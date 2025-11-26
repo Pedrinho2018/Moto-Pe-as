@@ -132,9 +132,6 @@ class AppPrincipal(ctk.CTk):
         
         # Criar primeira aba
         self._mudar_aba("📊 Dashboard")
-        
-        # Criar primeira aba
-        self._mudar_aba("📊 Dashboard")
     
     def _mudar_aba(self, aba_selecionada):
         """Muda entre abas."""
