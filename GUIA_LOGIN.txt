@@ -1,0 +1,42 @@
+═══════════════════════════════════════════════════════════════
+                    GUIA DE LOGIN - MotoPeças
+═══════════════════════════════════════════════════════════════
+
+COMO LOGAR NO SISTEMA:
+
+1. EXECUTE O PROGRAMA:
+   python main.py
+
+2. JANELA DE LOGIN APARECERÁ
+
+3. SELECIONE O FUNCIONÁRIO:
+   - Clique no campo "Funcionário:"
+   - Selecione: "2 - Vendedor Carlos"
+
+4. DIGITE A SENHA:
+   - Campo: "Senha:"
+   - Senha: 123456
+
+5. CLIQUE EM "ENTRAR"
+
+6. SE CORRETO:
+   ✓ Mensagem de sucesso apareça
+   ✓ Sistema abre automaticamente
+
+═══════════════════════════════════════════════════════════════
+
+IMPORTANTE:
+
+• Senha está CRIPTOGRAFADA com bcrypt (segura)
+• Não há mais senha padrão "1234"
+• Use sempre as credenciais do funcionário
+• Se errar a senha: tente novamente
+
+═══════════════════════════════════════════════════════════════
+
+CREDENCIAIS PARA TESTE:
+
+Funcionário: 2 - Vendedor Carlos
+Senha: 123456
+
+═══════════════════════════════════════════════════════════════

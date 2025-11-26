@@ -29,6 +29,7 @@ import os
 from dotenv import load_dotenv
 from contextlib import contextmanager
 from typing import Dict, Optional, Any
+import bcrypt  # type: ignore
 
 # Carregar credenciais do arquivo .env em config/
 # Isso mantém senhas e hosts fora do código
@@ -427,13 +428,39 @@ class DatabaseManager:
             print(f"[ERRO] get_funcionario: {e}")
             raise
     
+    def gerar_hash_senha(self, senha: str) -> str:
+        """
+        Gera um hash seguro de senha usando bcrypt.
+        
+        Args:
+            senha (str): Senha em texto plano
+            
+        Returns:
+            str: Hash da senha (seguro para armazenar no banco)
+        """
+        # bcrypt.gensalt() gera um salt com 12 rounds (padrão seguro)
+        # Isso torna ataques de força bruta muito mais difíceis
+        salt = bcrypt.gensalt(rounds=12)
+        
+        # Converter senha para bytes e gerar hash
+        senha_bytes = senha.encode('utf-8')
+        hash_senha = bcrypt.hashpw(senha_bytes, salt)
+        
+        # Retornar como string para armazenar no banco
+        return hash_senha.decode('utf-8')
+    
     def verificar_senha(self, id_funcionario: int, senha: str) -> bool:
         """
-        Verifica se a senha do funcionário está correta.
+        Verifica se a senha do funcionário está correta usando bcrypt.
+        
+        SEGURANÇA:
+        - A senha é comparada com o hash armazenado no banco
+        - Uso de bcrypt com salt garante proteção contra ataques
+        - Sem a senha em texto plano, dados vazados são inúteis
         
         Args:
             id_funcionario (int): ID do funcionário
-            senha (str): Senha a verificar (em produção, usar hash)
+            senha (str): Senha a verificar (em texto plano)
             
         Returns:
             bool: True se senha correta, False caso contrário
@@ -447,22 +474,29 @@ class DatabaseManager:
                 if not resultado:
                     return False
                 
-                # TEMPORÁRIO: Aceitar senha em texto puro
-                # Em produção, usar bcrypt ou similar
                 senha_hash = resultado.get('senha_hash', '')
                 
-                # Se não houver senha no banco, aceitar "1234"
+                # Se não houver senha no banco, rejeitar login
+                # Nenhum fallback para '1234' mais - segurança crítica!
                 if not senha_hash:
-                    return senha == "1234"
+                    print(f"[AVISO] Funcionário {id_funcionario} sem senha definida!")
+                    return False
                 
-                # Comparação simples (em produção, usar hash)
-                return senha == senha_hash or senha == "1234"
+                # Comparar senha usando bcrypt (seguro contra timing attacks)
+                try:
+                    senha_bytes = senha.encode('utf-8')
+                    hash_bytes = senha_hash.encode('utf-8')
+                    return bcrypt.checkpw(senha_bytes, hash_bytes)
+                except ValueError:
+                    # Hash inválido no banco (não é bcrypt válido)
+                    print(f"[ERRO] Hash de senha inválido para funcionário {id_funcionario}")
+                    return False
         
         except Error as e:
             print(f"[ERRO] verificar_senha: {e}")
             return False
     
-    def criar_funcionario(self, nome: str, cpf: str, cargo: str, email: str, telefone: str, senha_hash: str) -> bool:
+    def criar_funcionario(self, nome: str, cpf: str, cargo: str, email: str, telefone: str, senha: str) -> bool:
         """
         Cria um novo funcionário no sistema.
         
@@ -472,12 +506,15 @@ class DatabaseManager:
             cargo (str): Cargo (ex: Vendedor, Gerente, etc)
             email (str): Email do funcionário
             telefone (str): Telefone do funcionário
-            senha_hash (str): Hash da senha
+            senha (str): Senha do funcionário (em texto puro, será hash)
             
         Returns:
             bool: True se criado com sucesso, False caso contrário
         """
         try:
+            # Gerar hash da senha (em produção, usar bcrypt)
+            senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt())
+            
             with self.get_db_cursor(dictionary=True) as (conn, cur):
                 sql = """
                     INSERT INTO tb_funcionario (nome, cpf, cargo, email, telefone, senha_hash, ativo)

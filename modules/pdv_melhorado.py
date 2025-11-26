@@ -34,12 +34,12 @@ from core.database_basico import DatabaseManager
 from datetime import datetime
 
 
-class PontoDeVendaMelhorado(ctk.CTkToplevel):
+class PontoDeVendaMelhorado(ctk.CTkFrame):
     """
-    Janela de Ponto de Venda com funcionalidades melhoradas.
+    Frame de Ponto de Venda com funcionalidades melhoradas.
     
-    Herda de CTkToplevel = Janela separada (não parte da janela principal)
-    Isso permite que PDV rode independente do dashboard
+    Herda de CTkFrame = Integrado na interface principal
+    Isso permite que PDV seja exibido como uma aba normal
     
     Atributos:
     - self.carrinho: Lista de dicts com {id_produto, nome, quantidade, preco, subtotal}
@@ -49,16 +49,16 @@ class PontoDeVendaMelhorado(ctk.CTkToplevel):
     
     def __init__(self, parent, funcionario_id, funcionario_nome):
         """
-        Inicializa janela do PDV.
+        Inicializa frame do PDV.
         
         Args:
-            parent: Janela pai (AppCompleto)
+            parent: Frame pai que conterá o PDV
             funcionario_id: ID do vendedor
             funcionario_nome: Nome do vendedor (para exibir e auditoria)
         """
         super().__init__(parent)
-        self.title("MotoPeças - Ponto de Venda")
-        self.geometry("1200x800")
+        self.pack(fill="both", expand=True)  # ← IMPORTANTE: preencher o espaço do pai
+        self.title = None  # CTkFrame não tem title
         
         # Guardar dados do funcionário que está vendendo
         self.funcionario_id = funcionario_id
@@ -719,10 +719,6 @@ class PontoDeVendaMelhorado(ctk.CTkToplevel):
                     f"Cliente: {nome_cliente}\n"
                     f"Total: R$ {total:.2f}"
                 )
-                
-                # === AUTO-FECHAR A JANELA ===
-                # Fechar após 1 segundo para vendedor ver a mensagem
-                self.after(1000, self.destroy)
         
         except Exception as e:
             # Se algo deu errado, mostrar erro

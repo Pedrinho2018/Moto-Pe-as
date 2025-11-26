@@ -181,7 +181,7 @@ class LoginWindow(ctk.CTk):
         # ========== INFORMAÇÕES ==========
         info_label = ctk.CTkLabel(
             center_frame,
-            text="Para testes: use qualquer funcionário com senha '1234'",
+            text="Use suas credenciais de funcionário. Senhas criptografadas com bcrypt.",
             font=ctk.CTkFont(size=10),
             text_color="#666666",
             wraplength=280,
@@ -233,7 +233,7 @@ class LoginWindow(ctk.CTk):
             print(f"[ERRO] {e}")
 
     def _fazer_login(self):
-        """Realiza validação de login."""
+        """Realiza validação de login com segurança."""
         # Obter seleções
         usuario = self.combo_usuario.get()
         senha = self.entry_senha.get()
@@ -254,11 +254,9 @@ class LoginWindow(ctk.CTk):
             messagebox.showerror("Erro", "Formato de funcionário inválido!")
             return
 
-        # ========== VERIFICAR SENHA ==========
-        # Por enquanto: aceita '1234' para todos
-        # Você pode modificar depois para usar senha_hash do banco
-        
-        if senha == "1234":
+        # ========== VERIFICAR SENHA (SEGURO COM BCRYPT) ==========
+        # Usar o método verificar_senha que agora usa bcrypt
+        if self.db_manager.verificar_senha(id_func, senha):
             # LOGIN BEM-SUCEDIDO
             self.funcionario_id = id_func
             self.usuario_selecionado = usuario
@@ -266,7 +264,7 @@ class LoginWindow(ctk.CTk):
             self.destroy()  # Fecha janela de login
         else:
             # LOGIN FALHOU
-            messagebox.showerror("Erro", "Senha incorreta!")
+            messagebox.showerror("Erro", "Funcionário ou senha incorretos!")
             self.entry_senha.delete(0, "end")
             self.entry_senha.focus()
 

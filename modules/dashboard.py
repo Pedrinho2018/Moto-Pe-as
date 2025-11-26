@@ -78,11 +78,28 @@ class Dashboard:
         for widget in self.parent.winfo_children():
             widget.destroy()
         
+        # Mostrar mensagem de carregamento
+        loading_label = ctk.CTkLabel(
+            self.parent,
+            text="⏳ Carregando Dashboard...",
+            font=ctk.CTkFont(size=14),
+            text_color="#ffaa00"
+        )
+        loading_label.pack(pady=50)
+        
+        # Forçar atualização da tela
+        self.parent.update()
+        
         # Usar ScrollableFrame para melhor layout
         scroll_frame = ctk.CTkScrollableFrame(self.parent, fg_color="transparent")
-        scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         
         try:
+            # Remover label de carregamento
+            loading_label.destroy()
+            
+            # Adicionar scroll
+            scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+            
             # === HEADER ===
             header_frame = ctk.CTkFrame(scroll_frame, fg_color="transparent")
             header_frame.pack(fill="x", pady=15)
@@ -90,7 +107,8 @@ class Dashboard:
             label = ctk.CTkLabel(
                 header_frame,
                 text="📊 DASHBOARD",
-                font=ctk.CTkFont(size=22, weight="bold")
+                font=ctk.CTkFont(size=22, weight="bold"),
+                text_color="#00d9ff"
             )
             label.pack(side="left", anchor="w")
             
@@ -98,9 +116,10 @@ class Dashboard:
                 header_frame,
                 text="🔄 Atualizar",
                 command=self._criar_dashboard,
-                fg_color="#3B8ED0",
-                hover_color="#1f6aa5",
-                width=120
+                fg_color="#0066cc",
+                hover_color="#0050aa",
+                width=120,
+                corner_radius=8
             )
             btn_atualizar.pack(side="right", anchor="e", padx=10)
             
@@ -108,11 +127,14 @@ class Dashboard:
             self._criar_kpis(scroll_frame)
             
             # === GRÁFICO VENDAS POR DIA ===
-            pedidos = self.db.get_pedidos()
-            if pedidos:
-                hoje = datetime.now()
-                inicio_mes = datetime(hoje.year, hoje.month, 1)
-                self._grafico_vendas_dia(scroll_frame, pedidos, inicio_mes)
+            try:
+                pedidos = self.db.get_pedidos()
+                if pedidos:
+                    hoje = datetime.now()
+                    inicio_mes = datetime(hoje.year, hoje.month, 1)
+                    self._grafico_vendas_dia(scroll_frame, pedidos, inicio_mes)
+            except Exception as e:
+                print(f"[ERRO] Gráfico vendas: {e}")
             
             # === DOIS GRÁFICOS LADO A LADO ===
             graficos_row = ctk.CTkFrame(scroll_frame, fg_color="transparent")
@@ -122,26 +144,44 @@ class Dashboard:
             produtos_frame = ctk.CTkFrame(graficos_row, fg_color="transparent")
             produtos_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
             
-            if pedidos:
-                self._grafico_produtos_vendidos(produtos_frame, pedidos, inicio_mes)
+            try:
+                if pedidos:
+                    self._grafico_produtos_vendidos(produtos_frame, pedidos, inicio_mes)
+            except Exception as e:
+                print(f"[ERRO] Gráfico produtos: {e}")
             
             # Gráfico Top Clientes (direita)
             clientes_frame = ctk.CTkFrame(graficos_row, fg_color="transparent")
             clientes_frame.pack(side="right", fill="both", expand=True, padx=(5, 0))
             
-            if pedidos:
-                self._grafico_top_clientes(clientes_frame, pedidos, inicio_mes)
+            try:
+                if pedidos:
+                    self._grafico_top_clientes(clientes_frame, pedidos, inicio_mes)
+            except Exception as e:
+                print(f"[ERRO] Gráfico clientes: {e}")
             
             # === TABELA DE ALERTAS ===
-            self._criar_produtos_repor(scroll_frame)
+            try:
+                self._criar_produtos_repor(scroll_frame)
+            except Exception as e:
+                print(f"[ERRO] Produtos a repor: {e}")
             
             # === HISTÓRICO DE CLIENTES ===
-            self._criar_historico_clientes(scroll_frame)
+            try:
+                self._criar_historico_clientes(scroll_frame)
+            except Exception as e:
+                print(f"[ERRO] Histórico clientes: {e}")
             
         except Exception as e:
             print(f"[ERRO] Criando dashboard: {e}")
             import traceback
             traceback.print_exc()
+            
+            # Remover carregamento em caso de erro
+            try:
+                loading_label.destroy()
+            except:
+                pass
     
     def _criar_kpis(self, parent):
         """Cria cards com KPIs (Total de vendas, etc)."""
